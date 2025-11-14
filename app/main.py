@@ -3,7 +3,19 @@ from typing import Union
 
 from fastapi import FastAPI
 
-app = FastAPI()
+
+from app.config import settings
+from .routers import etl
+from .routers import upload
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+)
+
+# Routes
+app.include_router(upload.router)
+app.include_router(etl.router)
 
 
 @app.get("/")

@@ -1,7 +1,0 @@
-{
-    "python.analysis.autoImportCompletions": true,
-    "python.defaultInterpreterPath": ".venv/bin/python",
-    "python.analysis.extraPaths": [
-        "./app"
-    ]
-}

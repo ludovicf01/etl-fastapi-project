@@ -1,30 +1,33 @@
-import logging
+"""ETL service"""
 from pathlib import Path
-from app.db.session import get_db
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from sqlalchemy.orm import Session
-from app.services import etl_service
+import logging
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from sqlmodel import select
+from sqlalchemy.exc import SQLAlchemyError
+from app.db.session import SessionDep
 from app.models.data import CSVData
+from app.services import etl_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = Path("./data")
 
-def process_file_background(filename: str, db: Session):
+def process_file_background(filename: str, db:SessionDep):
     """Fonction pour traiter le fichier en arrière-plan"""
     try:
         file_path = UPLOAD_DIR / filename
         s3_path = f"s3://csv-files/uploads/{filename}"
-        etl_service.ETLService.process_csv_file(db, str(file_path), filename, s3_path)
-    except Exception as e:
-        logger.error(f"Background processing error: {e}")
+        result = etl_service.ETLService.process_csv_file(db, str(file_path), filename, s3_path)
+        print(result)
+    except SQLAlchemyError as e:
+        logger.error("Background processing error: %s", e)
 
 @router.post("/process/{filename}", response_model=dict)
 async def process_csv(
     filename: str,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    db_bis: SessionDep
 ):
     """
     Lancer le traitement ETL d'un fichier CSV
@@ -38,12 +41,12 @@ async def process_csv(
         raise HTTPException(status_code=404, detail="File not found")
 
     # Vérifier si déjà traité
-    existing = db.query(CSVData).filter(CSVData.filename == filename).first()
+    existing = db_bis.exec(select(CSVData).where(CSVData.filename == filename)).first()
     if existing and existing.status == "completed":
         raise HTTPException(status_code=400, detail="File already processed")
 
     # Lancer le traitement en arrière-plan
-    background_tasks.add_task(process_file_background, filename, db)
+    background_tasks.add_task(process_file_background, filename, db_bis)
 
     return {
         "message": "ETL process started",

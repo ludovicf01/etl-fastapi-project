@@ -1,34 +1,34 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
-from datetime import datetime
-from app.db.base import Base
+"""Model SQL"""
+from datetime import datetime, timezone
+from sqlmodel import Field, SQLModel
 
-class CSVData(Base):
-    """Modèle générique pour stocker les données CSV"""
+
+class CSVData(SQLModel, table=True):
+    """CSVData model sql"""
     __tablename__ = "file_metadata"
-    __table_args__ = {'schema': 'csv_data'}
+    __table_args__ = {"schema": "csv_data"}
+    id: int | None = Field(default=None, primary_key=True, index=True)
+    filename: str = Field(nullable=False)
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    s3_path: str = Field(nullable=False)
+    row_count: int = Field(default=None)
+    status: str = Field(default="uploaded") # uploaded, processing, completed, failed
 
-    id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String, nullable=False)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
-    s3_path = Column(String, nullable=False)
-    row_count = Column(Integer)
-    status = Column(String, default="uploaded")  # uploaded, processing, completed, failed
-
-class OpenDataRecord(Base):
+class OpenDataRecord(SQLModel, table=True):
     """Exemple de modèle pour données OpenData spécifiques"""
     __tablename__ = "opendata_records"
     __table_args__ = {'schema': 'csv_data'}
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: int | None = Field(default=None, primary_key=True, index=True)
 
     # Colonnes génériques - à adapter selon vos données
-    code = Column(String, index=True)
-    name = Column(String)
-    value = Column(Float)
-    category = Column(String)
-    description = Column(Text)
-    date = Column(DateTime)
+    code: str = Field(index=True)
+    name: str = Field(default=None)
+    value: float = Field(default=None)
+    category: str = Field(default=None)
+    description: str = Field(default=None)
+    date: datetime = Field(default=None)
 
     # Métadonnées
-    source_file = Column(String)
-    created_at = Column(DateTime, default=datetime.now())
+    source_file: str = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

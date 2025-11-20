@@ -1,19 +1,18 @@
-from sqlalchemy.orm import Session
-from app.models.data import CSVData, OpenDataRecord
-from app.services.s3_service import s3_service
-from app.services.csv_service import csv_service
+"""ETL service"""
 import logging
-from datetime import datetime
-from pathlib import Path
 import pandas as pd
+from app.db.session import SessionDep
+from app.models.data import OpenDataRecord, CSVData
+from app.services.csv_service import csv_service
+
 
 logger = logging.getLogger(__name__)
 
 class ETLService:
-
+    """etl objet service"""
     @staticmethod
     def process_csv_file(
-        db: Session,
+        db: SessionDep,
         file_path: str,
         filename: str,
         s3_path: str

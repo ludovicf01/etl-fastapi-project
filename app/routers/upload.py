@@ -60,11 +60,7 @@ async def upload_csv_file(file: UploadFile = File(...)):
         s3_key = f"uploads/{safe_filename}"
         s3_path = s3_service.upload_file(str(file_path), s3_key)
 
-        logger.info(f"File uploaded: {safe_filename} ({file_size} bytes)")
-
-        if(s3_key and s3_path):
-            file_path.unlink()
-
+        logger.info("File uploaded: %s (%s bytes)", safe_filename, file_size)
         return FileUploadResponse(
             filename=safe_filename,
             size=file_size,
@@ -74,7 +70,7 @@ async def upload_csv_file(file: UploadFile = File(...)):
         )
 
     except Exception as e:
-        logger.error(f"Upload error: {e}")
+        logger.error("Upload error: %s", e)
         if file_path.exists():
             file_path.unlink()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

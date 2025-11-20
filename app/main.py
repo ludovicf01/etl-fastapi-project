@@ -21,7 +21,7 @@ app.include_router(etl.router)
 @app.get("/")
 def read_root():
     """test"""
-    return {"Hello": "World"}
+    return {"msg": "Hello World"}
 
 
 @app.get("/items/{item_id}")

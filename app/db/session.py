@@ -1,13 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+"""session service"""
+from typing import Annotated
+from fastapi import Depends
+from sqlmodel import SQLModel, Session
+from sqlmodel import create_engine as create_engine_bis
 from app.config import settings
 
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine_bis(settings.DATABASE_URL, pool_pre_ping=True)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
+def create_db_and_tables():
+    """create db"""
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    """get session"""
+    with Session(engine) as session:
+        yield session
+
+
+SessionDep = Annotated[Session, Depends(get_session)]
